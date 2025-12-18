@@ -1,0 +1,32 @@
+{
+  "name": "smart-test-orchestration-dashboard",
+  "version": "1.0.0",
+  "description": "A self-hosted web app that runs, schedules, and visualizes Playwright tests—with smart features like flaky test detection, parallel execution, and historical trend analysis",
+  "homepage": "https://github.com/Muhtadi1Laskar/smart-test-orchestration-dashboard#readme",
+  "bugs": {
+    "url": "https://github.com/Muhtadi1Laskar/smart-test-orchestration-dashboard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Muhtadi1Laskar/smart-test-orchestration-dashboard.git"
+  },
+  "license": "ISC",
+  "author": "Muhtadi Laskar",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.11"
+  }
+}
