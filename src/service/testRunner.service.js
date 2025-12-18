@@ -2,54 +2,7 @@ import { spawn } from "child_process"
 import path from "path"
 import fs from 'fs/promises';
 import os from 'os';
-
-export const parsePlaywrightReport = (rawReport) => {
-    const { suites, stats } = rawReport;
-
-    const tests = [];
-    const failedTests = [];
-
-    function walkSuites(suite) {
-        for (const spec of suite.specs || []) {
-            for (const test of spec.tests || []) {
-                const result = test.results[0];
-                const testEntry = {
-                    title: spec.title,
-                    suite: suite.title,
-                    status: result.status,
-                    duration: result.duration,
-                    error: result.error?.message || null,
-                    // Add artifact paths if needed:
-                    screenshot: result.attachments?.find(a => a.name === 'screenshot')?.path || null,
-                    trace: result.attachments?.find(a => a.name === 'trace')?.path || null
-                };
-
-                tests.push(testEntry);
-                if (result.status === "failed") {
-                    failedTests.push(testEntry);
-                }
-            }
-        }
-        for (const childSuite of suite.suites || []) {
-            walkSuites(childSuite)
-        }
-    }
-
-    for (const suite of suites) {
-        walkSuites(suite);
-    }
-
-    return {
-        status: failedTests.length === 0 ? 'passed' : 'failed',
-        total: tests.length,
-        passed: tests.filter(t => t.status === 'passed').length,
-        failed: failedTests.length,
-        duration: stats.duration,
-        startTime: stats.startTime,
-        tests,
-        failedTests
-    };
-}
+import { parsePlaywrightReport } from "../utils/parseReport.js";
 
 export const testRunner = async (baseTestDir, runId) => {
     // 1. Create isolated output dir for THIS run
@@ -87,7 +40,6 @@ export const testRunner = async (baseTestDir, runId) => {
             clearTimeout(timeout);
 
             try {
-                // const report = code === 0 ? JSON.parse(stdout) : null;
                 const rawReportPath = path.join(outputDir, "raw-report.json");
                 await fs.writeFile(rawReportPath, stdout);
 
@@ -98,8 +50,6 @@ export const testRunner = async (baseTestDir, runId) => {
                     try {
                         report = JSON.parse(stdout);
                         summary = parsePlaywrightReport(report);
-
-                        console.log("SUMMARY: ", summary);
 
                         const summaryPath = path.join(outputDir, 'summary.json');
                         await fs.writeFile(summaryPath, JSON.stringify(summary, null, 2));

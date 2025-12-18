@@ -1,5 +1,5 @@
 import path from "path";
-import { parsePlaywrightReport, testRunner } from "../service/testRunner.service.js";
+import { testRunner } from "../service/testRunner.service.js";
 
 export const runTestController = async (req, res, next) => {
     const { testSuitePath } = req.body;
@@ -12,7 +12,6 @@ export const runTestController = async (req, res, next) => {
             'Transfer-Encoding': 'chunked'
         });
         const result = await testRunner(testSuitePath, runId);
-        console.log("Result: ", result.summary);
 
         res.end(JSON.stringify({
             runId: runId,
