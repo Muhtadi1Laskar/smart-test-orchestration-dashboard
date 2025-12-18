@@ -3,7 +3,7 @@ import cors from 'cors';
 import helment from 'helmet';
 import morgan from 'morgan';
 import { errorHandler } from './middlewares/errorHandler.js';
-
+import router from './routes/index.js';
 
 const app = express();
 
