@@ -56,7 +56,7 @@ npx playwright install chromium
 ```bash
 npm start
 ```
-→ Open http://localhost:3000
+→ Open http://localhost:8080
 
 ### 4. Run Your First Test
 1. Link a GitHub repo with a Playwright test suite  
