@@ -4,9 +4,15 @@ import fs from 'fs/promises';
 import os from 'os';
 import { parsePlaywrightReport } from "../utils/parseReport.js";
 
+const BROWSERS_PATH = 'C:\\playwright-browsers';
+
 export const testRunner = async (baseTestDir, runId) => {
     const outputDir = path.join(os.tmpdir(), `playwright-output-${runId}`);
     await fs.mkdir(outputDir, { recursive: true });
+
+    console.log("Base: ", baseTestDir);
+
+    console.log("BROWSER: ", process.env.PLAYWRIGHT_BROWSERS_PATH);
 
     const proc = spawn('npx', [
         'playwright',
@@ -17,6 +23,8 @@ export const testRunner = async (baseTestDir, runId) => {
         cwd: baseTestDir,
         env: {
             ...process.env,
+            PLAYWRIGHT_BROWSERS_PATH: BROWSERS_PATH,
+            PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1' // ← prevents auto-download
         },
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: process.platform === 'win32'

@@ -3,21 +3,27 @@ import { testRunner } from "../service/testRunner.service.js";
 import { cloneGithubRepo, installModules } from "../utils/githubClone.js";
 
 export const runTestController = async (req, res, next) => {
+    const { githubRepo } = req.body;
+
+    if (!githubRepo || githubRepo.length === 0) {
+        res.status(500).json({
+            message: "Please provide a Github repo"
+        });
+    }
+
     const runId = 'run_' + Date.now();
-    const cloneRepo = await cloneGithubRepo("https://github.com/Muhtadi1Laskar/Proof-Of-Existence.git", runId);
+    const cloneRepo = await cloneGithubRepo(githubRepo, runId);
     const installPackages = await installModules(cloneRepo);
 
     console.log(installPackages);
     console.log(cloneRepo);
-    const { testSuitePath } = req.body;
 
-    console.log(testSuitePath);
     try {
         res.writeHead(200, {
             'Content-Type': 'text/plain',
             'Transfer-Encoding': 'chunked'
         });
-        const result = await testRunner(testSuitePath, runId);
+        const result = await testRunner(cloneRepo, runId);
 
         res.end(JSON.stringify({
             runId: runId,

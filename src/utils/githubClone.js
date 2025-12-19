@@ -34,6 +34,8 @@ export const installModules = async (repoPath, timeoutMs = 300_000) => {
     // Resolve to absolute path to avoid surprises
     const absPath = path.resolve(repoPath);
 
+    console.log("Absolute Path: ", absPath);
+
     // Check if package.json exists (fail fast)
     const fs = await import('fs/promises');
     try {
@@ -45,7 +47,7 @@ export const installModules = async (repoPath, timeoutMs = 300_000) => {
     return new Promise((resolve) => {
         const npmProcess = spawn('npm', ['ci', '--ignore-scripts'], {
             cwd: absPath,
-            env: { ...process.env, NODE_ENV: 'production' },
+            env: { ...process.env },
             stdio: ['pipe', 'pipe', 'pipe'], // Capture all streams
             shell: process.platform === 'win32'
         });
