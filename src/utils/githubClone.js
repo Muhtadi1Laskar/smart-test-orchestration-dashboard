@@ -15,47 +15,65 @@ export const cloneGithubRepo = async (repoURL, id) => {
 
         const { stdout, stderr } = await execPromise(`git clone ${repoURL} "${outputDir}"`);
 
-        if (stderr && !stderr.includes("Cloning into")) {
-            console.warn("Git Waning/Error:", stderr);
+        if (stderr && !stderr.includes("Cloning into") && !stderr.trim().startsWith("remote:")) {
+            return {
+                success: false,
+                error: {
+                    type: "CLONE_FAILED",
+                    message: `Git clone failed: ${stderr.trim()}`
+                }
+            };
         }
 
-        return outputDir;
+        return { success: true, outputDir };
     } catch (error) {
-        throw new Error(`Failed to clone repository: ${error.message}`);
+        return {
+            success: false,
+            error: {
+                type: 'CLONE_FAILED',
+                message: `Failed to clone repository: ${error.message || 'Unknown error'}`
+            }
+        };
     }
 }
 
 export const installModules = async (repoPath, timeoutMs = 300_000) => {
-    // Validate input
     if (!repoPath || typeof repoPath !== 'string') {
-        throw new Error('Invalid repoPath: must be a non-empty string');
+        return {
+            success: false,
+            error: {
+                type: 'INVALID_INPUT',
+                message: 'Invalid repository path'
+            }
+        };
     }
 
-    // Resolve to absolute path to avoid surprises
     const absPath = path.resolve(repoPath);
 
-    console.log("Absolute Path: ", absPath);
-
-    // Check if package.json exists (fail fast)
     const fs = await import('fs/promises');
     try {
         await fs.access(path.join(absPath, 'package.json'));
     } catch {
-        throw new Error(`package.json not found in ${absPath}. Is this a valid Node.js project?`);
+        return {
+            success: false,
+            error: {
+                type: 'MISSING_PACKAGE_JSON',
+                message: 'The repository is missing a package.json file. Please ensure your test suite includes one with @playwright/test in devDependencies.'
+            }
+        };
     }
 
     return new Promise((resolve) => {
         const npmProcess = spawn('npm', ['ci', '--ignore-scripts'], {
             cwd: absPath,
             env: { ...process.env },
-            stdio: ['pipe', 'pipe', 'pipe'], // Capture all streams
+            stdio: ['pipe', 'pipe', 'pipe'],
             shell: process.platform === 'win32'
         });
 
         let stdout = '';
         let stderr = '';
 
-        // Capture output
         npmProcess.stdout?.on('data', (data) => {
             stdout += data.toString();
         });
@@ -64,28 +82,31 @@ export const installModules = async (repoPath, timeoutMs = 300_000) => {
             stderr += data.toString();
         });
 
-        // Handle process spawn failure
         npmProcess.on('error', (err) => {
             resolve({
                 success: false,
                 stdout: '',
                 stderr: '',
-                error: `Failed to start npm ci: ${err.message}`
+                error: {
+                    type: 'INSTALL_FAILED',
+                    message: `Failed to start npm install: ${err.message}`
+                }
             });
         });
 
-        // Enforce timeout
         const timeout = setTimeout(() => {
-            npmProcess.kill(); // Sends SIGTERM
+            npmProcess.kill();
             resolve({
                 success: false,
                 stdout,
                 stderr,
-                error: `npm ci timed out after ${timeoutMs / 1000} seconds`
+                error: {
+                    type: 'INSTALL_TIMEOUT',
+                    message: `Dependency installation timed out after ${timeoutMs / 1000} seconds. The repository may be too large or have network issues.`
+                }
             });
         }, timeoutMs);
 
-        // Handle normal exit
         npmProcess.on('close', (code) => {
             clearTimeout(timeout);
 
@@ -101,7 +122,10 @@ export const installModules = async (repoPath, timeoutMs = 300_000) => {
                     success: false,
                     stdout,
                     stderr,
-                    error: `npm ci failed with exit code ${code}. ${stderr || ''}`
+                    error: {
+                        type: 'INSTALL_FAILED',
+                        message: `npm install failed with exit code ${code}. Details: ${stderr || stdout}`
+                    }
                 });
             }
         });

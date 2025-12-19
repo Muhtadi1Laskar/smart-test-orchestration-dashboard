@@ -13,17 +13,20 @@ export const runTestController = async (req, res, next) => {
 
     const runId = 'run_' + Date.now();
     const cloneRepo = await cloneGithubRepo(githubRepo, runId);
-    const installPackages = await installModules(cloneRepo);
+    if(!cloneRepo.success) {
+        return res.status(400).json({ error: cloneRepo.error });
+    }
 
-    console.log(installPackages);
-    console.log(cloneRepo);
+    const installPackages = await installModules(cloneRepo.outputDir);
+    if (!installPackages.success) {
+        return res.status(400).json({ error: installPackages.error });
+    }
 
     try {
         res.writeHead(200, {
-            'Content-Type': 'text/plain',
-            'Transfer-Encoding': 'chunked'
+            'Content-Type': 'application/json'
         });
-        const result = await testRunner(cloneRepo, runId);
+        const result = await testRunner(cloneRepo.outputDir, runId);
 
         res.end(JSON.stringify({
             runId: runId,
