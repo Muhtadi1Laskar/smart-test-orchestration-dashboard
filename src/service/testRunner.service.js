@@ -5,24 +5,21 @@ import os from 'os';
 import { parsePlaywrightReport } from "../utils/parseReport.js";
 
 export const testRunner = async (baseTestDir, runId) => {
-    // 1. Create isolated output dir for THIS run
     const outputDir = path.join(os.tmpdir(), `playwright-output-${runId}`);
     await fs.mkdir(outputDir, { recursive: true });
 
-    // 2. Run Playwright from the ORIGINAL test dir (with browsers already installed)
     const proc = spawn('npx', [
-        'playwright', 'test',
+        'playwright',
+        'test',
         '--reporter=json',
-        `--output=${outputDir}` // ← critical: isolate results
+        `--output=${outputDir}`
     ], {
-        cwd: baseTestDir, // ← fixed path to your real test suite
+        cwd: baseTestDir,
         env: {
             ...process.env,
-            // Optional: disable video/trace if not needed to save space
-            // PWVIDEO: 'off',
         },
         stdio: ['pipe', 'pipe', 'pipe'],
-        shell: process.platform === 'win32' // true on Windows
+        shell: process.platform === 'win32'
     });
 
     let stdout = '';
@@ -34,7 +31,7 @@ export const testRunner = async (baseTestDir, runId) => {
     return new Promise((resolve) => {
         const timeout = setTimeout(() => {
             proc.kill();
-        }, 10 * 60 * 1000); // 10 min max
+        }, 10 * 60 * 1000);
 
         proc.on('close', async (code) => {
             clearTimeout(timeout);
@@ -67,7 +64,7 @@ export const testRunner = async (baseTestDir, runId) => {
                     report,
                     stdout,
                     stderr,
-                    outputDir, // so you can serve artifacts later,
+                    outputDir,
                     summary,
                     rawReportPath,
                     error: code !== 0 ? stderr : null
@@ -86,4 +83,3 @@ export const testRunner = async (baseTestDir, runId) => {
         });
     });
 }
-

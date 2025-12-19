@@ -1,8 +1,12 @@
 export const parsePlaywrightReport = (rawReport) => {
     const { suites, stats } = rawReport;
 
-    const tests = [];
-    const failedTests = [];
+    const citeria = {
+        passed: [],
+        failed: [],
+        skipped: [],
+        timedOut: []
+    };
 
     function walkSuites(suite) {
         for (const spec of suite.specs || []) {
@@ -14,17 +18,14 @@ export const parsePlaywrightReport = (rawReport) => {
                     status: result.status,
                     duration: result.duration,
                     error: result.error?.message || null,
-                    // Add artifact paths if needed:
                     screenshot: result.attachments?.find(a => a.name === 'screenshot')?.path || null,
                     trace: result.attachments?.find(a => a.name === 'trace')?.path || null
                 };
 
-                tests.push(testEntry);
-                if (result.status === "failed") {
-                    failedTests.push(testEntry);
-                }
+                citeria[result.status].push(testEntry);
             }
         }
+
         for (const childSuite of suite.suites || []) {
             walkSuites(childSuite)
         }
@@ -35,13 +36,17 @@ export const parsePlaywrightReport = (rawReport) => {
     }
 
     return {
-        status: failedTests.length === 0 ? 'passed' : 'failed',
-        total: tests.length,
-        passed: tests.filter(t => t.status === 'passed').length,
-        failed: failedTests.length,
+        status: citeria.failed.length === 0 ? 'passed' : 'failed',
+        total: citeria.passed.length + citeria.failed.length + citeria.skipped.length + citeria.timedOut.length,
+        passed: citeria.passed.filter(t => t.status === 'passed').length,
+        failed: citeria.failed.length,
+        skipped: citeria.skipped.length,
+        timedOut: citeria.timedOut.length,
         duration: stats.duration,
         startTime: stats.startTime,
-        tests,
-        failedTests
+        passedTests: citeria.passed,
+        failedTests: citeria?.failed || null,
+        skippedTests: citeria?.skipped || null,
+        timedOutTests: citeria?.timedOut || null
     };
 }

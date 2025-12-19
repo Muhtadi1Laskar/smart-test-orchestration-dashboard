@@ -11,6 +11,6 @@ dotenv.config({ path: join(__dirname, "./.env") });
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
-    console.log(`✅ Server is running on port: ${PORT}\n`);
+    console.log(`\n✅ Server is running on port: ${PORT}\n`);
 });
 
