@@ -4,9 +4,6 @@
 
 TestPilot is an open-source, self-hosted dashboard that transforms your Playwright test suites into an observable, shareable, and actionable engineering asset. Built for teams that want **visibility, reliability, and speed** — without relying on expensive SaaS tools.
 
-![TestPilot Dashboard](https://via.placeholder.com/800x400?text=Dashboard+Screenshot+-+Run+Tests+%7C+View+Results+%7C+Debug+Failures)  
-*(Actual screenshot recommended after deployment)*
-
 ---
 
 ## ✨ Why TestPilot?
