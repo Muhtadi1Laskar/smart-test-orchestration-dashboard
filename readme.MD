@@ -148,7 +148,7 @@ PRs welcome! Here’s how to help:
 
 ## 📜 License
 
-MIT © [Your Name]
+MIT © Muhtadi Laskar
 
 ---
 
